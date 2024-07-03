@@ -2,8 +2,6 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 
-import { methods as userAuth } from "./Controllers/userAuth.js";
-
 const app = express();
 const port = 3000;
 
@@ -13,12 +11,18 @@ app.listen(app.get("port"), () => {
 });
 
 app.use(cors());
-
 app.use(express.json());
 app.use(bodyParser.json());
 
-// Ruta para manejar el registro de usuarios
+// Methods for the API
+import { methods as userAuth } from "./Methods/userAuth.js";
+import { methods as postActions, uploadMiddleware } from "./Methods/postActions.js"
+
+// Route to manage user registration
 app.post('/api/register', userAuth.register);
 
-// Ruta para manejar el inicio de sesión de usuarios
+// Route to manage user login
 app.post('/api/login', userAuth.login);
+
+// Route for the management of post creation
+app.post('/api/newPost', uploadMiddleware, postActions.createPost);

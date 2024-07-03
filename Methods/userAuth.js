@@ -1,7 +1,7 @@
 import bcryptjs from 'bcryptjs';
 import { getSession } from "../connection.js";
 
-// LOGIN AUTHENTICATION
+// Login authentication
 async function login(req, res) {
     const session = getSession();
     const { email, password } = req.body;
@@ -12,11 +12,13 @@ async function login(req, res) {
 
     try {
         const result = await session.run(
-            'MATCH (u:User {email: $email}) RETURN u',
+            'MATCH (u:User {email: $email}) RETURN u, ID(u) AS id',
             { email }
         );
 
         const user = result.records[0]?.get('u').properties;
+        const userId = parseInt(result.records[0]?.get('id'));
+
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
@@ -26,7 +28,15 @@ async function login(req, res) {
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
-        res.status(200).json({ message: "Login successful." });
+        res.status(200).json({
+            message: "Login successful.",
+            user: {
+                id: userId,
+                username: user.username,
+                email: user.email
+            }
+        });
+
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: "Server error. Please try again later." });
@@ -35,17 +45,9 @@ async function login(req, res) {
     }
 }
 
-// REGISTER AUTHENTICATION
+// Register authentication
 async function register(req, res) {
     const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-        return res.status(400).json({ status: "Error", message: "Los campos están vacíos o incompletos" });
-    }
-
-    if (password.length < 8) {
-        return res.status(400).json({ status: "Error", message: "La contraseña debe tener al menos 8 caracteres" });
-    }
 
     const salt = await bcryptjs.genSalt(5);
     const hashedPassword = await bcryptjs.hash(password, salt);
@@ -56,22 +58,17 @@ async function register(req, res) {
             'CREATE (u:User {username: $username, email: $email, password: $password}) RETURN u',
             { username, email, password: hashedPassword }
         );
-
-        if (result.records.length > 0) {
-            return res.status(201).json({ message: "Registro exitoso" });
-        } else {
-            return res.status(400).json({ message: "No se pudo registrar al usuario" });
-        }
+        res.status(200).json({ status: "Success", message: "Registration successful" });
     } catch (err) {
         console.error("Error during registration", err);
-        return res.status(500).json({ status: "Error", message: "Error interno del servidor" });
+        res.status(500).json({ status: "Error", message: "Internal server error" });
     } finally {
         session.close();
     }
 }
 
-// EXPORT METHODS
+// Export methods
 export const methods = {
     register,
-    login
+    login,
 };
