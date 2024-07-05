@@ -4,7 +4,10 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage
 import { v4 as uuidv4 } from 'uuid';
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 // Create post function using Firebase & Neo4j
 async function createPost(req, res) {
@@ -20,7 +23,11 @@ async function createPost(req, res) {
   try {
     const imgRef = ref(firebaseStorage, `images/${uuidv4()}_${img.originalname}`);
 
-    await uploadBytes(imgRef, img.buffer);
+    if (!req.file || req.file.size === 0) {
+      return res.status(400).json({ status: "Error", message: "No image file provided or file is empty." });
+    }
+
+    await uploadBytes(imgRef, req.file.buffer);
 
     const imgUrl = await getDownloadURL(imgRef);
 
