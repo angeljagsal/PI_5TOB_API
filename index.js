@@ -5,10 +5,8 @@ import { methods as postActions, upload } from "./Methods/postActions.js"
 
 const app = express();
 
+const port = process.env.PORT || 3000;
 app.set("port", port);
-app.listen(app.get("port"), () => {
-  console.log(`Server listening on port`, app.get("port"));
-});
 
 app.use(cors());
 app.use(express.json()); // Handles JSON payloads
@@ -22,7 +20,6 @@ app.post('/api/login', userAuth.login);
 // Route for retrieving user data
 app.post('/api/userData', ) // To complete
 
-
 // Route for the management of post creation
 app.post('/api/post', upload.single('img'), postActions.createPost);
 
@@ -32,7 +29,6 @@ app.get('/api/posts', postActions.retrievePost);
 // Route for retrieving post data
 // app.get('/api/deletePost', postActions.deletePost);
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+app.listen(app.get("port"), () => {
+  console.log(`Server listening on port ${app.get("port")}`);
 });

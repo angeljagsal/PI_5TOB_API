@@ -2,9 +2,9 @@ import neo4j from 'neo4j-driver'
 import { initializeApp } from "firebase/app";
 import { getStorage } from 'firebase/storage';
 
-const neo4jUri = 'bolt://localhost';
+const neo4jUri = 'neo4j+s://9cb4d605.databases.neo4j.io';
 const neo4jUser = 'neo4j';
-const neo4jPass = 'traveldb123';
+const neo4jPass = 'Uxo5BB0g3-CTOU4n_w7wd-l_6gfoBwA4Uoe1VC9p7Q4';
 
 const driver = neo4j.driver(neo4jUri, neo4j.auth.basic(neo4jUser, neo4jPass));
 
