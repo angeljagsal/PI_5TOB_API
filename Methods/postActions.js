@@ -9,7 +9,7 @@ const upload = multer({ storage: storage });
 // Create post function using Firebase & Neo4j
 async function createPost(req, res) {
   const session = getSession();
-  const { title, desc, price } = req.body;
+  const { userId ,title, desc, price } = req.body;
   const img = req.file;
   const randomId = uuidv4();
 
@@ -25,8 +25,11 @@ async function createPost(req, res) {
     const imgUrl = await getDownloadURL(imgRef);
 
     const result = await session.run(
-      'CREATE (p:Post { postId: $randomId, title: $title, desc: $desc, price: $price, imageUrl: $imageUrl }) RETURN p',
-      { randomId, title, desc, price, imageUrl: imgUrl }
+      `MATCH (u:User {userId: $userId})
+      CREATE (p:Post { postId: $randomId, title: $title, desc: $desc, price: $price, imageUrl: $imageUrl })
+      CREATE (u)-[:CREATED]->(p)
+      RETURN p`,
+      { userId, randomId, title, desc, price, imageUrl: imgUrl }
     );
 
     res.status(200).json({ status: "Success", message: "Post was successfully created with image", post: result.records[0].get('p').properties });
