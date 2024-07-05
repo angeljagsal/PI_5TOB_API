@@ -4,7 +4,6 @@ import { methods as userAuth } from "./Methods/userAuth.js";
 import { methods as postActions, upload } from "./Methods/postActions.js"
 
 const app = express();
-const port = 3000;
 
 app.set("port", port);
 app.listen(app.get("port"), () => {
@@ -32,3 +31,8 @@ app.get('/api/posts', postActions.retrievePost);
 
 // Route for retrieving post data
 // app.get('/api/deletePost', postActions.deletePost);
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
