@@ -1,6 +1,6 @@
 import { getSession, storage as firebaseStorage } from "../connection.js";
 import multer from 'multer';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { v4 as uuidv4 } from 'uuid';
 
 const storage = multer.memoryStorage();
@@ -11,6 +11,7 @@ async function createPost(req, res) {
   const session = getSession();
   const { title, desc, price } = req.body;
   const img = req.file;
+  const randomId = uuidv4();
 
   if (!img) {
     return res.status(400).json({ status: "Error", message: "No image file provided." });
@@ -24,8 +25,8 @@ async function createPost(req, res) {
     const imgUrl = await getDownloadURL(imgRef);
 
     const result = await session.run(
-      'CREATE (p:Post { title: $title, desc: $desc, price: $price, imageUrl: $imageUrl }) RETURN p',
-      { title, desc, price, imageUrl: imgUrl }
+      'CREATE (p:Post { postId: $randomId, title: $title, desc: $desc, price: $price, imageUrl: $imageUrl }) RETURN p',
+      { randomId, title, desc, price, imageUrl: imgUrl }
     );
 
     res.status(200).json({ status: "Success", message: "Post was successfully created with image", post: result.records[0].get('p').properties });
@@ -53,6 +54,32 @@ async function retrievePost(req, res) {
     res.status(200).json({ status: "Success", posts: posts });
   } catch (err) {
     console.error("Error retrieving posts", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
+  } finally {
+    session.close();
+  }
+}
+
+// Delete all data from a post
+async function deletePost(req, res) {
+  const session = getSession();
+  const { postId, imgName } = req.body;
+
+  try{
+    const result = await session.run(
+      'MATCH (p:Post) WHERE p.postId = {$postId} DELETE p', // ESTABLECER UNA VARIABLE QUE CONTENGA EL ID DEL POST
+      { postId }
+    );
+
+    const imgRef = ref(firebaseStorage, `images/${imgName}.jpeg`).then(() => { // CAMBIAR imgName POR VARIABLE QUE CONTENGA EL NOMBRE DE LA IMAGEN
+      deleteObject(desertRef).then(() => {
+        // File deleted successfully
+      }).catch((error) => {
+        // Uh-oh, an error occurred!
+      });
+    })
+  } catch (err) {
+    console.error("Error:", err);
     res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
     session.close();

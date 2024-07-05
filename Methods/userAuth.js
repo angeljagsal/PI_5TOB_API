@@ -1,5 +1,6 @@
 import bcryptjs from 'bcryptjs';
 import { getSession } from "../connection.js";
+import { v4 as uuidv4 } from 'uuid';
 
 // Login authentication
 async function login(req, res) {
@@ -12,12 +13,11 @@ async function login(req, res) {
 
     try {
         const result = await session.run(
-            'MATCH (u:User {email: $email}) RETURN u, ID(u) AS id',
+            'MATCH (u:User {email: $email}) RETURN u',
             { email }
         );
 
         const user = result.records[0]?.get('u').properties;
-        const userId = parseInt(result.records[0]?.get('id'));
 
         if (!user) {
             return res.status(404).json({ message: "User not found." });
@@ -31,7 +31,7 @@ async function login(req, res) {
         res.status(200).json({
             message: "Login successful.",
             user: {
-                id: userId,
+                id: user.userId,
                 username: user.username,
                 email: user.email
             }
@@ -53,10 +53,12 @@ async function register(req, res) {
     const hashedPassword = await bcryptjs.hash(password, salt);
     const session = getSession();
 
+    const userId = uuidv4();
+
     try {
         const result = await session.run(
-            'CREATE (u:User {username: $username, email: $email, password: $password}) RETURN u',
-            { username, email, password: hashedPassword }
+            'CREATE (u:User { userId: $userId ,username: $username, email: $email, password: $password}) RETURN u',
+            { userId ,username, email, password: hashedPassword }
         );
         res.status(200).json({ status: "Success", message: "Registration successful" });
     } catch (err) {

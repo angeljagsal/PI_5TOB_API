@@ -23,8 +23,12 @@ app.post('/api/login', userAuth.login);
 // Route for retrieving user data
 app.post('/api/userData', ) // To complete
 
+
 // Route for the management of post creation
 app.post('/api/post', upload.single('img'), postActions.createPost);
 
 // Route for retrieving post data
 app.get('/api/posts', postActions.retrievePost);
+
+// Route for retrieving post data
+// app.get('/api/deletePost', postActions.deletePost);
