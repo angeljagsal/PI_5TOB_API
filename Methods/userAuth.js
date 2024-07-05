@@ -28,10 +28,21 @@ async function login(req, res) {
             return res.status(400).json({ message: "Invalid credentials." });
         }
 
+        const userId = user.userId;
+
+        const results = await session.run(
+            `MATCH (u:User{userId: $userId})-->(p:Post)
+            RETURN p.postId`,
+            { userId }
+        )
+
+        const postsId = results.records.map(record => record.get('p.postId'));
+
         res.status(200).json({
             message: "Login successful.",
             user: {
-                id: user.userId,
+                id: userId,
+                posts: postsId,
                 username: user.username,
                 email: user.email
             }
@@ -58,7 +69,7 @@ async function register(req, res) {
     try {
         const result = await session.run(
             'CREATE (u:User { userId: $userId ,username: $username, email: $email, password: $password}) RETURN u',
-            { userId ,username, email, password: hashedPassword }
+            { userId, username, email, password: hashedPassword }
         );
         res.status(200).json({ status: "Success", message: "Registration successful" });
     } catch (err) {
