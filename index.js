@@ -1,6 +1,7 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import cors from 'cors';
+import { methods as userAuth } from "./Methods/userAuth.js";
+import { methods as postActions, upload } from "./Methods/postActions.js"
 
 const app = express();
 const port = 3000;
@@ -11,12 +12,7 @@ app.listen(app.get("port"), () => {
 });
 
 app.use(cors());
-app.use(express.json());
-app.use(bodyParser.json());
-
-// Methods for the API
-import { methods as userAuth } from "./Methods/userAuth.js";
-import { methods as postActions, uploadMiddleware } from "./Methods/postActions.js"
+app.use(express.json()); // Handles JSON payloads
 
 // Route to manage user registration
 app.post('/api/register', userAuth.register);
@@ -24,5 +20,11 @@ app.post('/api/register', userAuth.register);
 // Route to manage user login
 app.post('/api/login', userAuth.login);
 
+// Route for retrieving user data
+app.post('/api/userData', ) // To complete
+
 // Route for the management of post creation
-app.post('/api/newPost', uploadMiddleware, postActions.createPost);
+app.post('/api/post', upload.single('img'), postActions.createPost);
+
+// Route for retrieving post data
+app.get('/api/posts', postActions.retrievePost);
