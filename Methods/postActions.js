@@ -12,7 +12,7 @@ const upload = multer({
 // Create post function using Firebase & Neo4j
 async function createPost(req, res) {
   const session = getSession();
-  const { userId ,title, desc, price } = req.body;
+  const { userId, title, desc, price } = req.body;
   const img = req.file;
   const randomId = uuidv4();
 
@@ -48,7 +48,7 @@ async function createPost(req, res) {
   }
 }
 
-// Retrieve post data function
+// Retrieve posts data function
 async function retrievePost(req, res) {
   const session = getSession();
 
@@ -70,12 +70,38 @@ async function retrievePost(req, res) {
   }
 }
 
+// Retrieve posts from user data function
+async function retrieveUserPost(req, res) {
+  const session = getSession();
+  const { userId } = req.body;
+
+  try {
+    const result = await session.run(`MATCH (u:User {userId: $userId})-[:CREATED]->(p:Post)
+       RETURN p`,
+      { userId }
+    );
+
+    const posts = result.records.map(record => record.get('p').properties);
+
+    if (posts.length === 0) {
+      return res.status(404).json({ status: "Error", message: "No posts found" });
+    }
+
+    res.status(200).json({ status: "Success", posts: posts });
+  } catch (err) {
+    console.error("Error retrieving posts", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
+  } finally {
+    await session.close();
+  }
+}
+
 // Delete all data from a post
 async function deletePost(req, res) {
   const session = getSession();
   const { postId, imgName } = req.body;
 
-  try{
+  try {
     const result = await session.run(
       'MATCH (p:Post) WHERE p.postId = {$postId} DELETE p', // ESTABLECER UNA VARIABLE QUE CONTENGA EL ID DEL POST
       { postId }
@@ -98,6 +124,7 @@ async function deletePost(req, res) {
 
 export const methods = {
   createPost,
-  retrievePost
+  retrievePost,
+  retrieveUserPost
 };
 export { upload };

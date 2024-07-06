@@ -1,6 +1,9 @@
 import neo4j from 'neo4j-driver'
 import { initializeApp } from "firebase/app";
 import { getStorage } from 'firebase/storage';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const neo4jUri = process.env.NEO4J_URI;
 const neo4jUser = process.env.NEO4J_USER;
