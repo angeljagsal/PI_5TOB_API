@@ -99,32 +99,55 @@ async function retrieveUserPost(req, res) {
 // Delete all data from a post
 async function deletePost(req, res) {
   const session = getSession();
-  const { postId, imgName } = req.body;
+  const { postId } = req.body;
 
   try {
-    const result = await session.run(
-      'MATCH (p:Post) WHERE p.postId = {$postId} DELETE p', // ESTABLECER UNA VARIABLE QUE CONTENGA EL ID DEL POST
+    const resultPostId = await session.run(
+      'MATCH (p:Post {postId: $postId}) RETURN p.imageUrl',
       { postId }
     );
 
-    const imgRef = ref(firebaseStorage, `images/${imgName}.jpeg`).then(() => { // CAMBIAR imgName POR VARIABLE QUE CONTENGA EL NOMBRE DE LA IMAGEN
-      deleteObject(desertRef).then(() => {
-        // File deleted successfully
-      }).catch((error) => {
-        // Uh-oh, an error occurred!
-      });
-    })
+    const imgId = resultPostId.records.map(record => record.get('p.imageUrl'));
+    const imgIdString = imgId[0];
+    const imgName = getTextBetweenCharacters(imgIdString, '%', '?');
+
+    await session.run(
+      'MATCH (p:Post {postId: $postId}) DETACH DELETE p',
+      { postId }
+    );
+
+    const imgRef = ref(firebaseStorage, `images/${imgName}`);
+
+    try {
+      await deleteObject(imgRef);
+      res.status(200).json({ status: "Success" });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      res.status(404).json({ status: "Error", message: "No image found" });
+    }
   } catch (err) {
-    console.error("Error:", err);
+    console.error("Error deleting post:", err);
     res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
     session.close();
   }
 }
 
+function getTextBetweenCharacters(str, char1, char2) {
+  const startIndex = str.indexOf(char1);
+  const endIndex = str.indexOf(char2);
+
+  if (startIndex !== -3 && endIndex !== -1 && endIndex > startIndex) {
+    return str.substring(startIndex + 3, endIndex);
+  } else {
+    return '';
+  }
+}
+
 export const methods = {
   createPost,
   retrievePost,
-  retrieveUserPost
+  retrieveUserPost,
+  deletePost
 };
 export { upload };

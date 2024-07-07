@@ -24,6 +24,8 @@ app.get('/api/posts', postActions.retrievePost); // Route for retrieving post da
 
 app.post('/api/userPosts', postActions.retrieveUserPost); // Route for retrieving post data from a user
 
+app.post('/api/deletePost', postActions.deletePost); // Route for deleting post from a user
+
 // Port
 app.listen(app.get("port"), () => {
   console.log(`Server listening on port ${app.get("port")}`);
