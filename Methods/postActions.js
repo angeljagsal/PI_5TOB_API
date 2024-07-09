@@ -51,7 +51,6 @@ async function createPost(req, res) {
 // Retrieve posts data function
 async function retrievePost(req, res) {
   const session = getSession();
-
   try {
     const result = await session.run('MATCH (p:Post) RETURN p');
 
@@ -73,6 +72,7 @@ async function retrievePost(req, res) {
 // Retrieve posts from user data function
 async function retrieveUserPost(req, res) {
   const session = getSession();
+
   const { userId } = req.body;
 
   try {
@@ -93,6 +93,34 @@ async function retrieveUserPost(req, res) {
     res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
     await session.close();
+  }
+}
+
+// Modify information in a post
+async function editPost(req, res) {
+  const session = getSession();
+  const { postId, title, desc, price } = req.body;
+
+  try {
+    const result = await session.run(
+      `MATCH(p:Post { postId: $postId })
+      SET p.title = $title, p.desc = $desc, p.price = $price
+      RETURN p`,
+      { postId, title, desc, price }
+    )
+
+    if (result.records.length === 0) {
+      res.status(404).json({ status: "Error", message: "Post no encontrado" });
+    } else {
+      res.status(200).json({ status: "Success", post: result.records[0].get('p').properties });
+    }
+  } catch (err) {
+    console.error("Error editando el post", err);
+    res.status(500).json({ status: "Error", message: "Internal server error", error: err.message });
+  } finally {
+    if (session) {
+      await session.close();
+    }
   }
 }
 
@@ -148,6 +176,8 @@ export const methods = {
   createPost,
   retrievePost,
   retrieveUserPost,
+  editPost,
   deletePost
 };
+
 export { upload };
