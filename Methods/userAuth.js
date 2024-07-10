@@ -44,7 +44,8 @@ async function login(req, res) {
                 id: userId,
                 posts: postsId,
                 username: user.username,
-                email: user.email
+                email: user.email,
+                profileImg: user.profileImg
             }
         });
 

@@ -21,7 +21,7 @@ async function createPost(req, res) {
   }
 
   try {
-    const imgRef = ref(firebaseStorage, `images/${uuidv4()}_${img.originalname}`);
+    const imgRef = ref(firebaseStorage, `post_images/${uuidv4()}_${img.originalname}`);
 
     if (!req.file || req.file.size === 0) {
       return res.status(400).json({ status: "Error", message: "No image file provided or file is empty." });
@@ -144,7 +144,7 @@ async function deletePost(req, res) {
       { postId }
     );
 
-    const imgRef = ref(firebaseStorage, `images/${imgName}`);
+    const imgRef = ref(firebaseStorage, `post_images/${imgName}`);
 
     try {
       await deleteObject(imgRef);

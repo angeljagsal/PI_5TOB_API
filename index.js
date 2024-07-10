@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { methods as userAuth } from "./Methods/userAuth.js";
 import { methods as postActions, upload } from "./Methods/postActions.js"
+import { methods as userActions } from "./Methods/userActions.js"
 
 const app = express();
 
@@ -16,6 +17,8 @@ app.use(express.json());
 app.post('/api/login', userAuth.login); // Route to manage user login
 
 app.post('/api/register', userAuth.register); // Route to manage user registration
+
+app.post('/api/uploadImg', upload.single('img'), userActions.saveProfileImg); // Route to manage user profile image uploading
 
 // Post actions routes
 app.post('/api/post', upload.single('img'), postActions.createPost); // Route for post creation
