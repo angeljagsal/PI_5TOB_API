@@ -18,9 +18,9 @@ app.post('/api/login', userAuth.login); // Route to manage user login
 
 app.post('/api/register', userAuth.register); // Route to manage user registration
 
-app.post('/api/like', userActions.addPostToLikes); // Route to create a relation between posts and users [:LIKES]
+app.post('/api/like', userActions.createUserLikeRelation); // Route to create a relation between posts and users [:LIKES]
 
-app.post('/api/likes', userActions.createUserLikeRelation); // Route to retrieve all likes from a user
+app.post('/api/likes', userActions.retrieveUserLikes); // Route to retrieve all likes from a user
 
 app.post('/api/uploadImg', upload.single('img'), userActions.saveProfileImg); // Route to manage user profile image uploading
 
