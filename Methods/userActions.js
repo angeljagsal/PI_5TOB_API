@@ -72,7 +72,7 @@ async function saveProfileImg(req, res) {
   }
 }
 
-async function addPostToLikes(req, res) {
+async function createUserLikeRelation(req, res) {
   const session = getSession();
   const { userId, postId } = req.body;
 
@@ -130,6 +130,6 @@ function getTextBetweenCharacters(str, char1, char2) {
 export const methods = {
   saveProfileImg,
   getUserData,
-  addPostToLikes,
+  createUserLikeRelation,
   retrieveUserLikes
 };
