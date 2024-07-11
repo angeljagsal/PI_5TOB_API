@@ -99,7 +99,7 @@ async function retrieveUserLikes(req, res) {
 
   try {
     const result = await session.run(
-      `MATCH (u:User {userId: '63d9e884-c7dc-49dc-ac70-aa67e79894b6'})-[:LIKES]->(p:Post)
+      `MATCH (u:User {userId: $userId})-[:LIKES]->(p:Post)
       RETURN p`,
       { userId }
     );
