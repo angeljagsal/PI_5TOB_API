@@ -72,6 +72,49 @@ async function saveProfileImg(req, res) {
   }
 }
 
+async function addPostToLikes(req, res) {
+  const session = getSession();
+  const { userId, postId } = req.body;
+
+  try {
+    const result = await session.run(
+      `MATCH (u:User { userId: $userId })
+      MATCH (p:Post { postId: $postId })
+      CREATE (u)-[:LIKES]->(p)`,
+      { userId, postId }
+    );
+  
+    res.status(200).json({ status: "Success", message: "Post liked succesfully" })
+  } catch (err) {
+    console.error("Error when trying to like post");
+    res.status(500).json({ status: "Error", message: "Internal server error" })
+  } finally {
+    await session.close()
+  }
+} 
+
+async function retrieveUserLikes(req, res) {
+  const session = getSession();
+  const { userId } = req.body;
+
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: '63d9e884-c7dc-49dc-ac70-aa67e79894b6'})-[:LIKES]->(p:Post)
+      RETURN p`,
+      { userId }
+    );
+
+    const posts = result.records.map(record => record.get('p').properties);
+  
+    res.status(200).json({ status: "Success", message: "Likes retrieved succesfully", posts: posts })
+  } catch (err) {
+    console.error("Error retrieving likes");
+    res.status(500).json({ status: "Error", message: "Internal server error" })
+  } finally {
+    await session.close()
+  }
+} 
+
 function getTextBetweenCharacters(str, char1, char2) {
   const startIndex = str.indexOf(char1);
   const endIndex = str.indexOf(char2);
@@ -83,7 +126,10 @@ function getTextBetweenCharacters(str, char1, char2) {
   }
 }
 
+
 export const methods = {
   saveProfileImg,
-  getUserData
+  getUserData,
+  addPostToLikes,
+  retrieveUserLikes
 };
