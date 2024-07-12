@@ -30,22 +30,31 @@ async function login(req, res) {
 
         const userId = user.userId;
 
-        const results = await session.run(
-            `MATCH (u:User{userId: $userId})-->(p:Post)
+        // const results = await session.run(
+        //     `MATCH (u:User{userId: $userId})-->(p:Post)
+        //     RETURN p.postId`,
+        //     { userId }
+        // )
+
+        // const postsId = results.records.map(record => record.get('p.postId'));
+
+        const likesResult = await session.run(
+            `MATCH (u:User {userId: $userId})-[:LIKES]->(p:Post)
             RETURN p.postId`,
             { userId }
         )
 
-        const postsId = results.records.map(record => record.get('p.postId'));
+        const likes = likesResult.records.map(record => record.get('p.postId'));
 
         res.status(200).json({
             message: "Login successful.",
             user: {
                 id: userId,
-                posts: postsId,
+                // posts: postsId,
                 username: user.username,
                 email: user.email,
-                profileImg: user.profileImg
+                profileImg: user.profileImg,
+                likes: likes
             }
         });
 

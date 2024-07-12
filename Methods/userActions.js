@@ -103,18 +103,18 @@ async function retrieveUserLikes(req, res) {
   try {
     const result = await session.run(
       `MATCH (u:User {userId: $userId})-[:LIKES]->(p:Post)
-      RETURN p`,
+       RETURN p`,
       { userId }
     );
 
     const posts = result.records.map(record => record.get('p').properties);
   
-    res.status(200).json({ status: "Success", message: "Likes retrieved succesfully", posts: posts })
+    res.status(200).json({ status: "Success", message: "Likes retrieved successfully", posts: posts });
   } catch (err) {
-    console.error("Error retrieving likes");
-    res.status(500).json({ status: "Error", message: "Internal server error" })
+    console.error("Error retrieving likes:", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
-    await session.close()
+    await session.close();
   }
 }
 
