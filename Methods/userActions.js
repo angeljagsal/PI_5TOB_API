@@ -77,21 +77,24 @@ async function createUserLikeRelation(req, res) {
   const { userId, postId } = req.body;
 
   try {
+    // console.log("Running query with userId:", userId, "and postId:", postId);
     const result = await session.run(
       `MATCH (u:User { userId: $userId })
-      MATCH (p:Post { postId: $postId })
-      CREATE (u)-[:LIKES]->(p)`,
+       MATCH (p:Post { postId: $postId })
+       MERGE (u)-[r:LIKES]->(p) 
+       RETURN r`,
       { userId, postId }
     );
-  
-    res.status(200).json({ status: "Success", message: "Post liked succesfully" })
+
+    // console.log("Query result:", result);
+    res.status(200).json({ status: "Success", message: "Post liked successfully" });
   } catch (err) {
-    console.error("Error when trying to like post");
-    res.status(500).json({ status: "Error", message: "Internal server error" })
+    console.error("Error when trying to like post", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
-    await session.close()
+    await session.close();
   }
-} 
+}
 
 async function retrieveUserLikes(req, res) {
   const session = getSession();
@@ -113,7 +116,30 @@ async function retrieveUserLikes(req, res) {
   } finally {
     await session.close()
   }
-} 
+}
+
+async function deleteUserLikeRelation(req, res) {
+  const session = getSession();
+  const { userId, postId } = req.body;
+
+  try {
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})-[r:LIKES]->(p:Post {postId: $postId})
+      DELETE r
+      RETURN r`,
+      { userId, postId }
+    );
+
+    // console.log("Query result:", result);
+    res.status(200).json({ status: "Success", message: "Like deleted succesfully" })
+  } catch {
+    console.error("Error deleting like");
+    res.status(500).json({ status: "Error", message: "Internal server error" })
+  } finally {
+    await session.close()
+  }
+}
+
 
 function getTextBetweenCharacters(str, char1, char2) {
   const startIndex = str.indexOf(char1);
@@ -131,5 +157,6 @@ export const methods = {
   saveProfileImg,
   getUserData,
   createUserLikeRelation,
-  retrieveUserLikes
+  retrieveUserLikes,
+  deleteUserLikeRelation
 };

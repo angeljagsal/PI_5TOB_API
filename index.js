@@ -22,6 +22,8 @@ app.post('/api/like', userActions.createUserLikeRelation); // Route to create a 
 
 app.post('/api/likes', userActions.retrieveUserLikes); // Route to retrieve all likes from a user
 
+app.post('/api/removeLike', userActions.deleteUserLikeRelation); // Route to remove a like from a post
+
 app.post('/api/uploadImg', upload.single('img'), userActions.saveProfileImg); // Route to manage user profile image uploading
 
 // Post actions routes
