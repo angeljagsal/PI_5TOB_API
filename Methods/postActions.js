@@ -96,6 +96,44 @@ async function retrieveUserPost(req, res) {
   }
 }
 
+async function  retrievePostInformation(req, res) {
+  const session = getSession();
+
+  const { postId } = req.body;
+
+  try {
+    const result = await session.run(
+      `MATCH (p:Post {postId: $postId})
+      RETURN p`,
+      { postId }
+    );
+
+    const postInfo = result.records.map(record => record.get('p').properties);
+
+    const userInfoResult = await session.run(
+      `MATCH (p:Post {postId: $postId})<-[:CREATED]-(u:User)
+      RETURN u.username AS username, u.profileImg AS userImg`,
+      { postId }
+    );
+
+    const userInfo = userInfoResult.records.map(record => ({
+      username: record.get('username'),
+      userImg: record.get('userImg')
+    }));
+
+    if (postInfo.length === 0) {
+      return res.status(404).json({ status: "Error", message: "No posts found" });
+    }
+
+    res.status(200).json({ status: "Success", post: postInfo, user: userInfo });
+  } catch (err) {
+    console.error("Error retrieving information", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
+  } finally {
+    await session.close();
+  }
+}
+
 // Modify information in a post
 async function editPost(req, res) {
   const session = getSession();
@@ -177,7 +215,8 @@ export const methods = {
   retrievePost,
   retrieveUserPost,
   editPost,
-  deletePost
+  deletePost,
+  retrievePostInformation
 };
 
 export { upload };

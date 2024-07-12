@@ -37,6 +37,8 @@ app.post('/api/editPost', postActions.editPost); // Route for editing a post fro
 
 app.post('/api/deletePost', postActions.deletePost); // Route for deleting post from a user
 
+app.post('/api/postInfo', postActions.retrievePostInformation); // Route to retrieve post information as well as creator username
+
 // Port
 app.listen(app.get("port"), () => {
   console.log(`Server listening on port ${app.get("port")}`);
