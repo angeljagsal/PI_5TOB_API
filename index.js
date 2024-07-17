@@ -12,19 +12,23 @@ app.set("port", port);
 app.use(cors());
 app.use(express.json());
 
-
 // User actions routes
 app.post('/api/login', userAuth.login); // Route to manage user login
 
 app.post('/api/register', userAuth.register); // Route to manage user registration
 
+app.post('/api/editUser', userActions.editUser); // Route to manage user editing
+
+app.post('/api/deleteUser', userActions.deleteUser); // Route to manage user deletion
+
+app.post('/api/uploadImg', upload.single('img'), userActions.saveProfileImg); // Route to manage user profile image uploading
+
+// Like actions routes
 app.post('/api/like', userActions.createUserLikeRelation); // Route to create a relation between posts and users [:LIKES]
 
 app.post('/api/likes', userActions.retrieveUserLikes); // Route to retrieve all likes from a user
 
 app.post('/api/removeLike', userActions.deleteUserLikeRelation); // Route to remove a like from a post
-
-app.post('/api/uploadImg', upload.single('img'), userActions.saveProfileImg); // Route to manage user profile image uploading
 
 // Post actions routes
 app.post('/api/post', upload.single('img'), postActions.createPost); // Route for post creation

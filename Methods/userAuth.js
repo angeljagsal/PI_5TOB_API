@@ -30,14 +30,6 @@ async function login(req, res) {
 
         const userId = user.userId;
 
-        // const results = await session.run(
-        //     `MATCH (u:User{userId: $userId})-->(p:Post)
-        //     RETURN p.postId`,
-        //     { userId }
-        // )
-
-        // const postsId = results.records.map(record => record.get('p.postId'));
-
         const likesResult = await session.run(
             `MATCH (u:User {userId: $userId})-[:LIKES]->(p:Post)
             RETURN p.postId`,
@@ -68,11 +60,21 @@ async function login(req, res) {
 
 // Register authentication
 async function register(req, res) {
+    const session = getSession();
     const { username, email, password } = req.body;
+
+    const resultEmail = await session.run(
+        'MATCH (u:User) RETURN u.email AS email',
+    );
+
+    const emails = resultEmail.records.map(record => record.get('email'));
+
+    if (emails.includes(email)) {
+        return res.status(400).json({ status: "Error", message: "Email already in use." });
+    }
 
     const salt = await bcryptjs.genSalt(5);
     const hashedPassword = await bcryptjs.hash(password, salt);
-    const session = getSession();
 
     const userId = uuidv4();
 

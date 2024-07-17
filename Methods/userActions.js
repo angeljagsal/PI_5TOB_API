@@ -2,6 +2,7 @@ import { getSession, storage as firebaseStorage } from "../connection.js";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { session } from "neo4j-driver";
 import { v4 as uuidv4 } from 'uuid';
+import bcryptjs from 'bcryptjs';
 
 async function getUserData(userId) {
   const session = getSession();
@@ -22,6 +23,73 @@ async function getUserData(userId) {
   } catch (error) {
     console.error("Error retrieving user data:", error);
     throw new Error("Error retrieving user data");
+  } finally {
+    await session.close();
+  }
+}
+
+async function editUser(req, res) {
+  const session = getSession();
+  const { userId, username, email, password } = req.body;
+
+  try {
+    const resultPass = await session.run(
+      'MATCH (u:User {userId: $userId}) RETURN u',
+      { userId }
+    );
+
+    const user = resultPass.records[0]?.get('u').properties;
+
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ status: "Error", message: "Invalid credentials." });
+    }
+
+    const result = await session.run(
+      `MATCH (u:User { userId: $userId })
+       SET u.username = $username, u.email = $email
+       RETURN u`,
+      { userId, username, email }
+    );
+
+    res.status(200).json({ status: "Success", message: "User edited successfully" });
+  } catch (err) {
+    console.error("Error editing user:", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
+  } finally {
+    await session.close();
+  }
+}
+
+// Delete user and it's posts
+async function deleteUser(req, res) {
+  const session = getSession();
+  const { userId, password } = req.body;
+
+  try {
+    const resultPass = await session.run(
+      'MATCH (u:User {userId: $userId}) RETURN u',
+      { userId }
+    );  
+
+    const user = resultPass.records[0]?.get('u').properties;
+
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ status: "Error", message: "Invalid credentials." });
+    }
+    
+    const result = await session.run(
+      `MATCH (u:User {userId: $userId})
+      OPTIONAL MATCH (u)-[:CREATED]-(p:Post)
+      DETACH DELETE u, p`,
+      { userId }
+    );
+
+    res.status(200).json({ status: "Success", message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ status: "Error", message: "Internal server error" });
   } finally {
     await session.close();
   }
@@ -108,7 +176,7 @@ async function retrieveUserLikes(req, res) {
     );
 
     const posts = result.records.map(record => record.get('p').properties);
-  
+
     res.status(200).json({ status: "Success", message: "Likes retrieved successfully", posts: posts });
   } catch (err) {
     console.error("Error retrieving likes:", err);
@@ -152,10 +220,11 @@ function getTextBetweenCharacters(str, char1, char2) {
   }
 }
 
-
 export const methods = {
   saveProfileImg,
   getUserData,
+  editUser,
+  deleteUser,
   createUserLikeRelation,
   retrieveUserLikes,
   deleteUserLikeRelation
